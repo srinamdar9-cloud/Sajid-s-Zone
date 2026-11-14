@@ -1,0 +1,321 @@
+{
+  "entities": {
+    "TaskItem": {
+      "title": "TaskItem",
+      "description": "A user task with scheduling, priority, category, status, and recurrence metadata.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Task title"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional detailed task description"
+        },
+        "date": {
+          "type": "string",
+          "description": "Scheduled date in YYYY-MM-DD format"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time in HH:mm format or empty"
+        },
+        "deadlineTime": {
+          "type": "string",
+          "description": "Deadline time in HH:mm format or empty"
+        },
+        "reminderDate": {
+          "type": "string",
+          "description": "Reminder date in YYYY-MM-DD format or empty"
+        },
+        "reminderTime": {
+          "type": "string",
+          "description": "Reminder time in HH:mm format or empty"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["High", "Medium", "Low"],
+          "description": "Task priority level"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Personal", "Office", "Health", "Family", "Financial", "Shopping", "Other"],
+          "description": "Task category"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Completed"],
+          "description": "Task completion status"
+        },
+        "recurrence": {
+          "type": "string",
+          "enum": ["None", "Daily", "Weekly", "Monthly"],
+          "description": "Recurring reminder schedule"
+        },
+        "completedAtEpochMs": {
+          "type": "integer",
+          "description": "Completion timestamp in epoch milliseconds or 0"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp written via FieldValue.serverTimestamp()"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp written via FieldValue.serverTimestamp()"
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "description",
+        "date",
+        "startTime",
+        "deadlineTime",
+        "reminderDate",
+        "reminderTime",
+        "priority",
+        "category",
+        "status",
+        "recurrence",
+        "completedAtEpochMs",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "JournalEntry": {
+      "title": "JournalEntry",
+      "description": "A private user journal entry with long-form notes and daily reflection fields.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID"
+        },
+        "date": {
+          "type": "string",
+          "description": "Entry date in YYYY-MM-DD format"
+        },
+        "time": {
+          "type": "string",
+          "description": "Entry time in HH:mm format"
+        },
+        "title": {
+          "type": "string",
+          "description": "Journal entry title"
+        },
+        "content": {
+          "type": "string",
+          "description": "Long-form journal body text"
+        },
+        "accomplished": {
+          "type": "string",
+          "description": "What did I accomplish today?"
+        },
+        "wentWell": {
+          "type": "string",
+          "description": "What went well today?"
+        },
+        "couldImprove": {
+          "type": "string",
+          "description": "What could I improve?"
+        },
+        "tomorrowFocus": {
+          "type": "string",
+          "description": "What should I focus on tomorrow?"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp written via FieldValue.serverTimestamp()"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp written via FieldValue.serverTimestamp()"
+        }
+      },
+      "required": [
+        "userId",
+        "date",
+        "time",
+        "title",
+        "content",
+        "accomplished",
+        "wentWell",
+        "couldImprove",
+        "tomorrowFocus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ExpenseItem": {
+      "title": "ExpenseItem",
+      "description": "A user expense record in INR with category and payment method.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Expense amount in INR"
+        },
+        "description": {
+          "type": "string",
+          "description": "Expense description"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Grocery",
+            "Petrol and Transportation",
+            "Electricity",
+            "Mobile and Internet",
+            "Medical and Healthcare",
+            "Household Expenses",
+            "Food and Restaurants",
+            "Shopping",
+            "Travel",
+            "Family Expenses",
+            "Personal Expenses",
+            "Other"
+          ],
+          "description": "Expense category"
+        },
+        "date": {
+          "type": "string",
+          "description": "Expense date in YYYY-MM-DD format"
+        },
+        "time": {
+          "type": "string",
+          "description": "Expense time in HH:mm format"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["Cash", "UPI", "Debit Card", "Credit Card", "Bank Transfer"],
+          "description": "Payment method"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional expense notes"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp written via FieldValue.serverTimestamp()"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp written via FieldValue.serverTimestamp()"
+        }
+      },
+      "required": [
+        "userId",
+        "amount",
+        "description",
+        "category",
+        "date",
+        "time",
+        "paymentMethod",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserPreferences": {
+      "title": "UserPreferences",
+      "description": "User preferences synced across devices including theme, time format, notifications, and PIN hash.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated owner UID"
+        },
+        "themeMode": {
+          "type": "string",
+          "enum": ["System", "Light", "Dark"],
+          "description": "App appearance mode"
+        },
+        "use24HourTime": {
+          "type": "boolean",
+          "description": "True for 24-hour clock, false for 12-hour clock"
+        },
+        "notificationsEnabled": {
+          "type": "boolean",
+          "description": "Master notification toggle"
+        },
+        "headsUpMinutes": {
+          "type": "integer",
+          "description": "Minutes before start time for heads-up notification"
+        },
+        "overdueNudgeEnabled": {
+          "type": "boolean",
+          "description": "Enable daily nudge for overdue tasks"
+        },
+        "pinEnabled": {
+          "type": "boolean",
+          "description": "Enable PIN lock"
+        },
+        "pinHash": {
+          "type": "string",
+          "description": "SHA-256 hex digest of PIN"
+        },
+        "lockJournalOnly": {
+          "type": "boolean",
+          "description": "True to lock Journal section, false to lock whole app"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp written via FieldValue.serverTimestamp()"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp written via FieldValue.serverTimestamp()"
+        }
+      },
+      "required": [
+        "userId",
+        "themeMode",
+        "use24HourTime",
+        "notificationsEnabled",
+        "headsUpMinutes",
+        "overdueNudgeEnabled",
+        "pinEnabled",
+        "pinHash",
+        "lockJournalOnly",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/TaskItem" },
+      "description": "User-owned tasks and reminder schedules"
+    },
+    "/users/{userId}/journal/{entryId}": {
+      "schema": { "$ref": "#/entities/JournalEntry" },
+      "description": "Private user journal entries and daily reflections"
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/ExpenseItem" },
+      "description": "User-owned INR expense records"
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/UserPreferences" },
+      "description": "User preferences synced across devices"
+    }
+  }
+}

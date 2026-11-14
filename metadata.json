@@ -1,0 +1,6 @@
+{
+  "name": "Sajid's Zone",
+  "description": "Personal productivity suite for Android with tasks, local reminders, private journal with PIN lock, expense tracker with XLSX/PDF export, calendar, reports, and cloud sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

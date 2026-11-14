@@ -1,0 +1,237 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidDateStr(val) {
+      return val is string && val.size() == 10 && val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidOptionalDateStr(val) {
+      return val is string && (val.size() == 0 || (val.size() == 10 && val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')));
+    }
+
+    function isValidOptionalTimeStr(val) {
+      return val is string && (val.size() == 0 || (val.size() == 5 && val.matches('^[0-9]{2}:[0-9]{2}$')));
+    }
+
+    function isValidTimeStr(val) {
+      return val is string && val.size() == 5 && val.matches('^[0-9]{2}:[0-9]{2}$');
+    }
+
+    function isValidTask(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.description is string && data.description.size() <= 2000 &&
+             isValidDateStr(data.date) &&
+             isValidOptionalTimeStr(data.startTime) &&
+             isValidOptionalTimeStr(data.deadlineTime) &&
+             isValidOptionalDateStr(data.reminderDate) &&
+             isValidOptionalTimeStr(data.reminderTime) &&
+             data.priority in ['High', 'Medium', 'Low'] &&
+             data.category in ['Personal', 'Office', 'Health', 'Family', 'Financial', 'Shopping', 'Other'] &&
+             data.status in ['Pending', 'Completed'] &&
+             data.recurrence in ['None', 'Daily', 'Weekly', 'Monthly'] &&
+             data.completedAtEpochMs is int && data.completedAtEpochMs >= 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidJournalEntry(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             isValidDateStr(data.date) &&
+             isValidTimeStr(data.time) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.content is string && data.content.size() <= 20000 &&
+             data.accomplished is string && data.accomplished.size() <= 3000 &&
+             data.wentWell is string && data.wentWell.size() <= 3000 &&
+             data.couldImprove is string && data.couldImprove.size() <= 3000 &&
+             data.tomorrowFocus is string && data.tomorrowFocus.size() <= 3000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidExpense(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.amount is number && data.amount > 0 && data.amount <= 100000000 &&
+             data.description is string && data.description.size() >= 1 && data.description.size() <= 200 &&
+             data.category in [
+               'Grocery',
+               'Petrol and Transportation',
+               'Electricity',
+               'Mobile and Internet',
+               'Medical and Healthcare',
+               'Household Expenses',
+               'Food and Restaurants',
+               'Shopping',
+               'Travel',
+               'Family Expenses',
+               'Personal Expenses',
+               'Other'
+             ] &&
+             isValidDateStr(data.date) &&
+             isValidTimeStr(data.time) &&
+             data.paymentMethod in ['Cash', 'UPI', 'Debit Card', 'Credit Card', 'Bank Transfer'] &&
+             data.notes is string && data.notes.size() <= 1000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPreferences(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.themeMode in ['System', 'Light', 'Dark'] &&
+             data.use24HourTime is bool &&
+             data.notificationsEnabled is bool &&
+             data.headsUpMinutes is int && data.headsUpMinutes >= 0 && data.headsUpMinutes <= 120 &&
+             data.overdueNudgeEnabled is bool &&
+             data.pinEnabled is bool &&
+             data.pinHash is string && data.pinHash.size() <= 128 &&
+             data.lockJournalOnly is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      match /tasks/{taskId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(taskId);
+        allow create: if isOwner(userId) &&
+                         isValidId(taskId) &&
+                         incoming().userId == userId &&
+                         incoming().keys().hasAll([
+                           'userId', 'title', 'description', 'date', 'startTime', 'deadlineTime',
+                           'reminderDate', 'reminderTime', 'priority', 'category', 'status',
+                           'recurrence', 'completedAtEpochMs', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'title', 'description', 'date', 'startTime', 'deadlineTime',
+                           'reminderDate', 'reminderTime', 'priority', 'category', 'status',
+                           'recurrence', 'completedAtEpochMs', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidTask(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(taskId) &&
+                         isValidTask(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'description', 'date', 'startTime', 'deadlineTime',
+                           'reminderDate', 'reminderTime', 'priority', 'category', 'status',
+                           'recurrence', 'completedAtEpochMs', 'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && isValidId(taskId);
+      }
+
+      match /journal/{entryId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(entryId);
+        allow create: if isOwner(userId) &&
+                         isValidId(entryId) &&
+                         incoming().userId == userId &&
+                         incoming().keys().hasAll([
+                           'userId', 'date', 'time', 'title', 'content',
+                           'accomplished', 'wentWell', 'couldImprove', 'tomorrowFocus',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'date', 'time', 'title', 'content',
+                           'accomplished', 'wentWell', 'couldImprove', 'tomorrowFocus',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidJournalEntry(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(entryId) &&
+                         isValidJournalEntry(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'date', 'time', 'title', 'content',
+                           'accomplished', 'wentWell', 'couldImprove', 'tomorrowFocus',
+                           'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && isValidId(entryId);
+      }
+
+      match /expenses/{expenseId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(expenseId);
+        allow create: if isOwner(userId) &&
+                         isValidId(expenseId) &&
+                         incoming().userId == userId &&
+                         incoming().keys().hasAll([
+                           'userId', 'amount', 'description', 'category', 'date',
+                           'time', 'paymentMethod', 'notes', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'amount', 'description', 'category', 'date',
+                           'time', 'paymentMethod', 'notes', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidExpense(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(expenseId) &&
+                         isValidExpense(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'amount', 'description', 'category', 'date',
+                           'time', 'paymentMethod', 'notes', 'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && isValidId(expenseId);
+      }
+
+      match /settings/{settingId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) && isValidId(settingId);
+        allow create: if isOwner(userId) &&
+                         settingId == 'preferences' &&
+                         incoming().userId == userId &&
+                         incoming().keys().hasAll([
+                           'userId', 'themeMode', 'use24HourTime', 'notificationsEnabled',
+                           'headsUpMinutes', 'overdueNudgeEnabled', 'pinEnabled', 'pinHash',
+                           'lockJournalOnly', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'themeMode', 'use24HourTime', 'notificationsEnabled',
+                           'headsUpMinutes', 'overdueNudgeEnabled', 'pinEnabled', 'pinHash',
+                           'lockJournalOnly', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidPreferences(incoming());
+        allow update: if isOwner(userId) &&
+                         settingId == 'preferences' &&
+                         isValidPreferences(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'themeMode', 'use24HourTime', 'notificationsEnabled',
+                           'headsUpMinutes', 'overdueNudgeEnabled', 'pinEnabled', 'pinHash',
+                           'lockJournalOnly', 'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && settingId == 'preferences';
+      }
+    }
+  }
+}
